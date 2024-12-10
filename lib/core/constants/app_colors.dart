@@ -8,7 +8,7 @@ class AppColors {
 
   // Top Navigation Colors
   static const Color titleColor = Color(0xFF000000);
-  static const Color appbarBackgroundColor = Color(0xF9F9F9F0);
+  static const Color appbarBackgroundColor = Color(0xFFF9F9F9);
 
   // Text colors
   static const Color date = Color(0xAA3C4399);
