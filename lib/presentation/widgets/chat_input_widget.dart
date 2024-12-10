@@ -4,7 +4,7 @@ import 'package:chat_challenge/core/constants/app_text_styles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-import 'timer_button.dart'; // Import the TimerButton
+import 'timer_button.dart';
 
 class ChatInputWidget extends StatefulWidget {
   final TextEditingController controller;
@@ -30,15 +30,13 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
   @override
   void initState() {
     super.initState();
-    inputText =
-        widget.controller.text; // Initialize with current controller text
+    inputText = widget.controller.text;
     widget.controller.addListener(_onTextChanged);
   }
 
   @override
   void dispose() {
     widget.controller.removeListener(_onTextChanged);
-    widget.controller.dispose();
     super.dispose();
   }
 
@@ -48,13 +46,23 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
     });
   }
 
+  void _handleSend() {
+    widget.onSend();
+    // Reset the controller, which will also reset the text field height
+    widget.controller.clear();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 44,
+      constraints: BoxConstraints(
+        minHeight: 44,
+        maxHeight: 160, // Maximum height for 4 lines
+      ),
       margin: const EdgeInsets.symmetric(vertical: 8.0),
       padding: const EdgeInsets.symmetric(horizontal: 8.0),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           TimerButton(
             onToggle: widget.onToggleTimer,
@@ -64,11 +72,14 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
             child: TextField(
               style: AppTextStyles.inputBoxTextStyle,
               controller: widget.controller,
-              textInputAction: TextInputAction.send,
+              textInputAction: TextInputAction.newline,
+              keyboardType: TextInputType.multiline,
+              maxLines: 4,
+              minLines: 1,
               onChanged: (value) {
                 setState(() {});
               },
-              onSubmitted: (_) => widget.onSend(),
+              onSubmitted: (_) => _handleSend(),
               decoration: InputDecoration(
                 contentPadding: const EdgeInsets.symmetric(
                   vertical: 12.0,
@@ -95,7 +106,7 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
                 suffixIcon: inputText.isEmpty
                     ? null
                     : IconButton(
-                        onPressed: widget.onSend,
+                        onPressed: _handleSend,
                         icon: SvgPicture.asset(AppIcons.sendButton),
                         splashRadius: 20.0,
                       ),
