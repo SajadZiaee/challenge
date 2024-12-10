@@ -28,18 +28,18 @@ class CustomAppBar extends ConsumerWidget implements PreferredSizeWidget {
                 icon: SvgPicture.asset(AppIcons.chevronLeft),
                 onPressed: () {},
               ),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircleAvatar(
-                    backgroundImage: AssetImage(user.profilePicture),
-                    radius: 30,
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      ref.read(currentUserProvider.notifier).toggleUser();
-                    },
-                    child: Row(
+              GestureDetector(
+                onTap: () {
+                  ref.read(currentUserProvider.notifier).toggleUser();
+                },
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircleAvatar(
+                      backgroundImage: AssetImage(user.profilePicture),
+                      radius: 30,
+                    ),
+                    Row(
                       children: [
                         Text(user.name, style: AppTextStyles.avatarTextStyle),
                         const SizedBox(
@@ -51,8 +51,8 @@ class CustomAppBar extends ConsumerWidget implements PreferredSizeWidget {
                         ),
                       ],
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               IconButton(
                 icon: SvgPicture.asset(AppIcons.video),
