@@ -31,19 +31,11 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      # Step 5: Generate localization files
-      - name: Generate localization files
-        run: flutter gen-l10n
-
-      # Step 6: Run build_runner to generate files
-      - name: Build with build_runner
-        run: dart run build_runner build --delete-conflicting-outputs
-
-      # Step 7: Build APK (Android)
+      # Step 5: Build APK (Android)
       - name: Build APK (Android)
         run: flutter build apk --release
 
-      # Step 8: Upload APK artifact
+      # Step 6: Upload APK artifact
       - name: Upload APK
         uses: actions/upload-artifact@v3
         with:
