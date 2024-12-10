@@ -9,7 +9,7 @@ class MessageNotifier extends StateNotifier<List<ChatMessage>> {
   }
 
   void deleteMessage(String messageId) {
-    state = state.where((msg) => msg.id != messageId).toList();
+    state = state.where((message) => message.id != messageId).toList();
   }
 
   void clearMessages() {

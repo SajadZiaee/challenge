@@ -135,13 +135,11 @@ class ChatScreenState extends ConsumerState<ChatScreen> {
                     key: ValueKey(message.id),
                     direction: DismissDirection.endToStart,
                     onDismissed: (direction) {
-                      if (message.senderId == currentUser.id) {
-                        _deleteMessage(
-                            message.id); // Only delete user's own messages
-                      }
+                      ref
+                          .read(messageProvider.notifier)
+                          .deleteMessage(message.id);
                     },
                     confirmDismiss: (direction) async {
-                      // Optionally confirm the delete action
                       final shouldDelete = await showDialog<bool>(
                         context: context,
                         builder: (BuildContext context) => AlertDialog(
