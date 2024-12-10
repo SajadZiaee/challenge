@@ -37,7 +37,7 @@ class ChatScreenState extends ConsumerState<ChatScreen> {
         timestamp: DateTime.now(),
         senderId: senderId,
         isDisappearing: _isDisappearingEnabled,
-        duration: 10);
+        duration: 60);
 
     ref.read(messageProvider.notifier).addMessage(newMessage);
 
