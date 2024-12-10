@@ -71,3 +71,8 @@ The data flow is managed by **Riverpod providers**:
 The **`ListView`** widget is responsible for managing a large number of messages efficiently. It only keeps the messages that are visible on the screen, and it disposes of those that are not in view to conserve memory. This is automatically handled by Flutter’s **viewport-based rendering** and **lazy loading**.
 
 ---
+
+## Testing
+
+For running test, you can use
+ ``` flutter test test/time_ago_helper_test.dart ```
