@@ -4,7 +4,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:chat_challenge/core/constants/app_colors.dart';
 import 'package:chat_challenge/core/constants/app_icons.dart';
 import 'package:chat_challenge/core/constants/app_text_styles.dart';
-import 'package:chat_challenge/application/providers/current_user_provider.dart'; // Import the provider
+import 'package:chat_challenge/application/providers/current_user_provider.dart';
+import 'package:chat_challenge/application/providers/s3_providers.dart'; // Import the upload provider
 
 class CustomAppBar extends ConsumerWidget implements PreferredSizeWidget {
   const CustomAppBar({super.key});
@@ -12,6 +13,9 @@ class CustomAppBar extends ConsumerWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
+    final uploadState =
+        ref.watch(uploadDownloadProvider); // Access upload state
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -29,9 +33,11 @@ class CustomAppBar extends ConsumerWidget implements PreferredSizeWidget {
                 onPressed: () {},
               ),
               GestureDetector(
-                onTap: () {
-                  ref.read(currentUserProvider.notifier).toggleUser();
-                },
+                onTap: uploadState.isUploading
+                    ? null // Disable toggling if an image is being uploaded
+                    : () {
+                        ref.read(currentUserProvider.notifier).toggleUser();
+                      },
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
