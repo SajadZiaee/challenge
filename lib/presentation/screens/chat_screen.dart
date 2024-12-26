@@ -25,9 +25,24 @@ class ChatScreenState extends ConsumerState<ChatScreen> {
   final ScrollController _scrollController = ScrollController();
 
   @override
+  void initState() {
+    super.initState();
+    // Add a listener to the scroll controller
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
   void dispose() {
+    // Remove the listener and dispose the scroll controller
+    _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _onScroll() {
+    // Dismiss the keyboard when the user scrolls
+    print('object');
+    FocusScope.of(context).unfocus();
   }
 
   void _handleSend(String messageText, int senderId, {String? imageUrl}) {
@@ -51,7 +66,7 @@ class ChatScreenState extends ConsumerState<ChatScreen> {
     }
 
     // Scroll to the bottom when a new message is sent
-    _scrollToBottom();
+    // _scrollToBottom();
   }
 
   void _toggleDisappearingMessages(bool isActivated) {
