@@ -12,22 +12,24 @@ class MessageBubbleWidget extends ConsumerStatefulWidget {
   final ChatMessage message;
   final bool tail;
 
-  const MessageBubbleWidget(
-      {super.key, required this.message, this.tail = false});
+  const MessageBubbleWidget({
+    super.key,
+    required this.message,
+    this.tail = false,
+  });
 
   @override
   MessageBubbleWidgetState createState() => MessageBubbleWidgetState();
 }
 
 class MessageBubbleWidgetState extends ConsumerState<MessageBubbleWidget> {
-  late bool _isBlinking;
-  late Timer _timer;
-  late DateTime _messageExpireTime;
+  bool _isBlinking = false;
+  Timer? _timer; // Make _timer nullable
+  DateTime? _messageExpireTime; // Make _messageExpireTime nullable
 
   @override
   void initState() {
     super.initState();
-    _isBlinking = false;
 
     if (widget.message.isDisappearing) {
       _messageExpireTime = widget.message.timestamp
@@ -38,22 +40,20 @@ class MessageBubbleWidgetState extends ConsumerState<MessageBubbleWidget> {
 
   @override
   void dispose() {
-    if (_timer.isActive) {
-      _timer.cancel();
-    }
+    _timer?.cancel(); // Check if _timer is initialized before canceling
     super.dispose();
   }
 
   void _startBlinkingTimer() {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       final remainingTime =
-          _messageExpireTime.difference(DateTime.now()).inSeconds;
+          _messageExpireTime?.difference(DateTime.now()).inSeconds ?? 0;
       if (remainingTime <= 5 && remainingTime >= 0) {
         setState(() {
           _isBlinking = !_isBlinking;
         });
       } else if (remainingTime < 0) {
-        _timer.cancel();
+        _timer?.cancel(); // Check if _timer is initialized before canceling
       }
     });
   }
