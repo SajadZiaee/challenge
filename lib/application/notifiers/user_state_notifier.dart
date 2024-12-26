@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:chat_challenge/data/users_local.dart';
+import 'package:chat_challenge/data/data_source/local/users_local.dart';
 import '../../domain/entities/user.dart';
 import '../../application/providers/message_notifier_provider.dart'; // assuming you have this provider for messages
 

@@ -1,5 +1,7 @@
 import 'dart:ui';
 
+import 'package:flutter/material.dart';
+
 class AppColors {
   // Bubble Colors
   static const Color senderBubble = Color(0xFF007AFF);
@@ -24,4 +26,6 @@ class AppColors {
   // Background Colors
   static const Color topNavbarBackgroundColor = Color(0xF9F9F9F0);
   static const Color backgroundColor = Color(0xFFFFFFFF);
+
+  static const Color transparent = Colors.transparent;
 }

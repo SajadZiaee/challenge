@@ -30,14 +30,17 @@ class ChatScreenState extends ConsumerState<ChatScreen> {
     super.dispose();
   }
 
-  void _handleSend(String messageText, int senderId) {
+  void _handleSend(String messageText, int senderId, {String? imageUrl}) {
     final newMessage = ChatMessage(
-        id: DateTime.now().toString(),
-        text: messageText,
-        timestamp: DateTime.now(),
-        senderId: senderId,
-        isDisappearing: _isDisappearingEnabled,
-        duration: 60);
+      id: DateTime.now().toString(),
+      isImage: imageUrl != null,
+      imageUrl: imageUrl,
+      text: messageText,
+      timestamp: DateTime.now(),
+      senderId: senderId,
+      isDisappearing: _isDisappearingEnabled,
+      duration: 60,
+    );
 
     ref.read(messageProvider.notifier).addMessage(newMessage);
 
@@ -185,8 +188,9 @@ class ChatScreenState extends ConsumerState<ChatScreen> {
             ),
             ChatInputWidget(
               controller: _controller,
-              onSend: () {
-                _handleSend(_controller.text, currentUser.id);
+              onSend: (String? imageUrl) {
+                _handleSend(_controller.text, currentUser.id,
+                    imageUrl: imageUrl);
                 _controller.clear();
               },
               onToggleTimer: (bool value) {

@@ -1,14 +1,19 @@
+import 'dart:io';
 import 'package:chat_challenge/core/constants/app_colors.dart';
 import 'package:chat_challenge/core/constants/app_icons.dart';
 import 'package:chat_challenge/core/constants/app_text_styles.dart';
+import 'package:chat_challenge/presentation/widgets/upload_file_button.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:image_picker/image_picker.dart';
 
+import '../../application/providers/s3_providers.dart'; // Ensure this imports the correct provider
 import 'timer_button.dart';
 
-class ChatInputWidget extends StatefulWidget {
+class ChatInputWidget extends ConsumerStatefulWidget {
   final TextEditingController controller;
-  final VoidCallback onSend;
+  final Function(String? imageUrl) onSend;
   final ValueChanged<bool> onToggleTimer;
   final bool isTimerActivated;
 
@@ -24,7 +29,8 @@ class ChatInputWidget extends StatefulWidget {
   _ChatInputWidgetState createState() => _ChatInputWidgetState();
 }
 
-class _ChatInputWidgetState extends State<ChatInputWidget> {
+class _ChatInputWidgetState extends ConsumerState<ChatInputWidget> {
+  File? _selectedImage;
   late String inputText;
 
   @override
@@ -46,24 +52,62 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
     });
   }
 
-  void _handleSend() {
-    widget.onSend();
-    // Reset the controller, which will also reset the text field height
-    widget.controller.clear();
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      setState(() {
+        _selectedImage = File(pickedFile.path);
+        widget.controller.clear();
+      });
+    }
+  }
+
+  void _clearImage() {
+    setState(() {
+      _selectedImage = null;
+    });
+    ref.read(uploadDownloadProvider.notifier).resetState();
+  }
+
+  void _handleSend() async {
+    if (_selectedImage != null) {
+      // Start uploading the image
+      final uploadNotifier = ref.read(uploadDownloadProvider.notifier);
+      await uploadNotifier.uploadImage(_selectedImage!);
+
+      // Check if the upload was successful
+      if (uploadNotifier.state.isSuccess) {
+        widget.onSend(uploadNotifier.state.fileUrl);
+        setState(() {
+          _selectedImage = null;
+        });
+      }
+    } else if (inputText.isNotEmpty) {
+      // Text send logic
+      widget.onSend(null);
+      widget.controller.clear();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final uploadState = ref.watch(uploadDownloadProvider);
+
     return Container(
-      constraints: BoxConstraints(
+      constraints: const BoxConstraints(
         minHeight: 44,
-        maxHeight: 160, // Maximum height for 4 lines
+        maxHeight: 160,
       ),
       margin: const EdgeInsets.symmetric(vertical: 8.0),
       padding: const EdgeInsets.symmetric(horizontal: 8.0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
+          UploadFileButton(
+            onTap: _pickImage,
+          ),
           TimerButton(
             onToggle: widget.onToggleTimer,
             isActivated: widget.isTimerActivated,
@@ -76,16 +120,12 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
               keyboardType: TextInputType.multiline,
               maxLines: 4,
               minLines: 1,
-              onChanged: (value) {
-                setState(() {});
-              },
-              onSubmitted: (_) => _handleSend(),
               decoration: InputDecoration(
                 contentPadding: const EdgeInsets.symmetric(
                   vertical: 12.0,
                   horizontal: 16.0,
                 ),
-                hintText: "iMessage",
+                hintText: _selectedImage != null ? null : "iMessage",
                 filled: true,
                 fillColor: AppColors.backgroundColor,
                 border: OutlineInputBorder(
@@ -103,13 +143,62 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
                   ),
                 ),
                 hintStyle: AppTextStyles.inputBoxHintTextStyle,
-                suffixIcon: inputText.isEmpty
-                    ? null
-                    : IconButton(
+                prefixIcon: _selectedImage != null
+                    ? Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12.0), // Add padding
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(
+                                  12.0), // Rounded corners
+                              child: Image.file(
+                                _selectedImage!,
+                                width: 100, // Adjust width
+                                height: 100, // Adjust height
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                          if (uploadState.isUploading)
+                            CircularProgressIndicator(
+                              value: uploadState.progress,
+                              backgroundColor: Colors.white54,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                uploadState.isSuccess
+                                    ? Colors.green
+                                    : Colors.blue,
+                              ),
+                              strokeWidth: 2,
+                            ),
+                          Positioned(
+                            top: 12,
+                            right: 12,
+                            child: GestureDetector(
+                              onTap: _clearImage,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.red.withOpacity(0.7),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.close,
+                                  color: Colors.white,
+                                  size: 12,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      )
+                    : null,
+                suffixIcon: (_selectedImage != null || inputText.isNotEmpty)
+                    ? IconButton(
                         onPressed: _handleSend,
                         icon: SvgPicture.asset(AppIcons.sendButton),
                         splashRadius: 20.0,
-                      ),
+                      )
+                    : null,
               ),
             ),
           ),
