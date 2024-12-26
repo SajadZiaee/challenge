@@ -53,7 +53,7 @@ class MessageBubbleWidgetState extends ConsumerState<MessageBubbleWidget> {
           _isBlinking = !_isBlinking;
         });
       } else if (remainingTime < 0) {
-        _timer?.cancel(); // Check if _timer is initialized before canceling
+        _timer?.cancel();
       }
     });
   }

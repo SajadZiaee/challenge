@@ -139,27 +139,6 @@ class ChatScreenState extends ConsumerState<ChatScreen> {
                           .read(messageProvider.notifier)
                           .deleteMessage(message.id);
                     },
-                    confirmDismiss: (direction) async {
-                      final shouldDelete = await showDialog<bool>(
-                        context: context,
-                        builder: (BuildContext context) => AlertDialog(
-                          title: const Text('Confirm Deletion'),
-                          content: const Text(
-                              'Are you sure you want to delete this message?'),
-                          actions: <Widget>[
-                            TextButton(
-                              onPressed: () => Navigator.of(context).pop(false),
-                              child: const Text('Cancel'),
-                            ),
-                            TextButton(
-                              onPressed: () => Navigator.of(context).pop(true),
-                              child: const Text('Delete'),
-                            ),
-                          ],
-                        ),
-                      );
-                      return shouldDelete ?? false;
-                    },
                     background: Container(
                       color: Colors
                           .transparent, // Transparent to keep the bubble's background
