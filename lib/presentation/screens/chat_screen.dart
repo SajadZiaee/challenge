@@ -67,16 +67,6 @@ class ChatScreenState extends ConsumerState<ChatScreen> {
     }
   }
 
-  void _deleteMessage(String messageId) {
-    ref.read(messageProvider.notifier).deleteMessage(messageId);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Message deleted'),
-        duration: Duration(seconds: 2),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final currentUser = ref.watch(currentUserProvider);
@@ -133,29 +123,40 @@ class ChatScreenState extends ConsumerState<ChatScreen> {
 
                   return Dismissible(
                     key: ValueKey(message.id),
-                    direction: DismissDirection.endToStart,
+                    direction: message.senderId != currentUser.id
+                        ? DismissDirection.endToStart
+                        : DismissDirection.startToEnd,
                     onDismissed: (direction) {
                       ref
                           .read(messageProvider.notifier)
                           .deleteMessage(message.id);
                     },
-                    background: Container(
-                      color: Colors
-                          .transparent, // Transparent to keep the bubble's background
-                    ),
-                    secondaryBackground: Container(
-                      color: Colors
-                          .redAccent, // Use red color for iOS-like behavior
-                      alignment: Alignment.centerRight,
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: const Icon(
-                        Icons.delete,
-                        color: Colors.white,
-                        size: 30,
-                      ),
-                    ),
+                    background: message.senderId != currentUser.id
+                        ? Container()
+                        : Container(
+                            color: Colors.redAccent,
+                            alignment: Alignment.centerLeft,
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: const Icon(
+                              Icons.delete,
+                              color: Colors.white,
+                              size: 30,
+                            ),
+                          ),
+                    secondaryBackground: message.senderId != currentUser.id
+                        ? Container(
+                            color: Colors.redAccent,
+                            alignment: Alignment.centerRight,
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: const Icon(
+                              Icons.delete,
+                              color: Colors.white,
+                              size: 30,
+                            ),
+                          )
+                        : Container(),
                     child: Column(
-                      crossAxisAlignment: message.senderId == currentUser.id
+                      crossAxisAlignment: message.senderId != currentUser.id
                           ? CrossAxisAlignment.end
                           : CrossAxisAlignment.start,
                       children: [
