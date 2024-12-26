@@ -97,7 +97,7 @@ class ChatScreenState extends ConsumerState<ChatScreen> {
                       final timeDifference = nextMessage.timestamp
                           .difference(message.timestamp)
                           .inMinutes;
-                      if (timeDifference > 5) {
+                      if (timeDifference > 2) {
                         hasTail = true;
                       }
                     }
