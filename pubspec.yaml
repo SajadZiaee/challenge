@@ -48,6 +48,7 @@ dependencies:
   dio: ^5.7.0
   mime: ^1.0.6
   minio: ^3.5.7
+  http: ^1.2.2
 
 dev_dependencies:
   flutter_test:

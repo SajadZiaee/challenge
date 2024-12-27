@@ -8,7 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../../application/providers/s3_providers.dart'; // Ensure this imports the correct provider
+import '../../application/providers/s3_providers.dart';
 import 'timer_button.dart';
 
 class ChatInputWidget extends ConsumerStatefulWidget {
@@ -83,6 +83,28 @@ class _ChatInputWidgetState extends ConsumerState<ChatInputWidget> {
         setState(() {
           _selectedImage = null;
         });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Colors.red,
+            content: const Text('Error While Uploading'),
+            behavior: SnackBarBehavior.floating,
+            margin: EdgeInsets.only(
+              bottom: MediaQuery.of(context).size.height -
+                  100, // Position at the top
+              left: 20,
+              right: 20,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            animation: CurvedAnimation(
+              parent: ModalRoute.of(context)!.animation!,
+              curve: Curves.easeInOut,
+            ),
+            showCloseIcon: true,
+          ),
+        );
       }
     } else if (inputText.isNotEmpty) {
       // Text send logic
@@ -148,14 +170,13 @@ class _ChatInputWidgetState extends ConsumerState<ChatInputWidget> {
                         alignment: Alignment.center,
                         children: [
                           Container(
-                            padding: const EdgeInsets.all(12.0), // Add padding
+                            padding: const EdgeInsets.all(12.0),
                             child: ClipRRect(
-                              borderRadius: BorderRadius.circular(
-                                  12.0), // Rounded corners
+                              borderRadius: BorderRadius.circular(12.0),
                               child: Image.file(
                                 _selectedImage!,
-                                width: 100, // Adjust width
-                                height: 100, // Adjust height
+                                width: 100,
+                                height: 100,
                                 fit: BoxFit.cover,
                               ),
                             ),
@@ -163,13 +184,10 @@ class _ChatInputWidgetState extends ConsumerState<ChatInputWidget> {
                           if (uploadState.isUploading)
                             CircularProgressIndicator(
                               value: uploadState.progress,
-                              backgroundColor: Colors.white54,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                uploadState.isSuccess
-                                    ? Colors.green
-                                    : Colors.blue,
-                              ),
-                              strokeWidth: 2,
+                              backgroundColor: AppColors.backgroundColor,
+                              valueColor: const AlwaysStoppedAnimation<Color>(
+                                  AppColors.inputBorder),
+                              strokeWidth: 4,
                             ),
                           Positioned(
                             top: 12,
@@ -184,7 +202,7 @@ class _ChatInputWidgetState extends ConsumerState<ChatInputWidget> {
                                 child: const Icon(
                                   Icons.close,
                                   color: Colors.white,
-                                  size: 12,
+                                  size: 18,
                                 ),
                               ),
                             ),

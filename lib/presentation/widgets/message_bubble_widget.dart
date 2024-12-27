@@ -1,16 +1,17 @@
 import 'dart:io';
-
+import 'package:http/http.dart' as http;
 import 'package:chat_bubbles/bubbles/bubble_special_three.dart';
 import 'package:chat_bubbles/chat_bubbles.dart';
+import 'package:chat_challenge/core/constants/app_icons.dart';
 import 'package:chat_challenge/domain/entities/chat_message.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/svg.dart';
 import 'dart:async';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../application/providers/current_user_provider.dart';
-import '../../data/data_source/remote/remote_data_source.dart';
 
 class MessageBubbleWidget extends ConsumerStatefulWidget {
   final ChatMessage message;
@@ -32,6 +33,7 @@ class MessageBubbleWidgetState extends ConsumerState<MessageBubbleWidget> {
   DateTime? _messageExpireTime; // Make _messageExpireTime nullable
   File? _downloadedImage; // Store the downloaded image file
   double _downloadProgress = 0.0; // Track download progress
+  bool _downloadError = false; // Track download error
 
   @override
   void initState() {
@@ -43,7 +45,6 @@ class MessageBubbleWidgetState extends ConsumerState<MessageBubbleWidget> {
       _startBlinkingTimer();
     }
 
-    // Download the image if the message contains an image
     if (widget.message.isImage) {
       _downloadImage();
     }
@@ -51,7 +52,7 @@ class MessageBubbleWidgetState extends ConsumerState<MessageBubbleWidget> {
 
   @override
   void dispose() {
-    _timer?.cancel(); // Check if _timer is initialized before canceling
+    _timer?.cancel();
     super.dispose();
   }
 
@@ -71,27 +72,48 @@ class MessageBubbleWidgetState extends ConsumerState<MessageBubbleWidget> {
 
   Future<void> _downloadImage() async {
     try {
-      final s3RemoteDatasource = S3RemoteDatasource();
-      final fileName = widget.message.imageUrl!.split('/').last;
-
-      // Simulate progress updates (replace this with actual progress updates from your upload logic)
-      for (int i = 0; i <= 100; i += 10) {
-        await Future.delayed(const Duration(milliseconds: 200));
-        setState(() {
-          _downloadProgress = i / 100.0;
-        });
-      }
-
-      final downloadedFile = await s3RemoteDatasource.downloadImage(fileName);
       setState(() {
-        _downloadedImage = downloadedFile;
-        _downloadProgress =
-            1.0; // Set progress to 100% when download is complete
+        _downloadError = false;
       });
+
+      final url = widget.message.imageUrl!;
+      final request = http.Request('GET', Uri.parse(url));
+      final streamedResponse = await request.send();
+
+      final contentLength = streamedResponse.contentLength ?? 0;
+      int receivedLength = 0;
+
+      final file = File('${Directory.systemTemp.path}/${url.split('/').last}');
+      final sink = file.openWrite();
+
+      await streamedResponse.stream.listen(
+        (List<int> chunk) {
+          receivedLength += chunk.length;
+          setState(() {
+            _downloadProgress = receivedLength / contentLength;
+          });
+          sink.add(chunk);
+        },
+        onDone: () async {
+          await sink.close();
+          setState(() {
+            _downloadedImage = file;
+            _downloadProgress = 1.0;
+          });
+        },
+        onError: (e) {
+          sink.close();
+          setState(() {
+            _downloadProgress = 0.0;
+            _downloadError = true;
+          });
+        },
+      );
     } catch (e) {
       print('Error downloading image: $e');
       setState(() {
-        _downloadProgress = 0.0; // Reset progress on error
+        _downloadProgress = 0.0;
+        _downloadError = true;
       });
     }
   }
@@ -136,27 +158,62 @@ class MessageBubbleWidgetState extends ConsumerState<MessageBubbleWidget> {
                   ? AppColors.disappearingBubble
                   : AppColors.transparent,
             )
-          : BubbleNormalImage(
-              id: widget.message.id,
-              image: Stack(
-                alignment: Alignment.center,
-                children: [
-                  if (_downloadedImage != null)
-                    _buildBlurryImage(_downloadedImage!),
-                  CircularProgressIndicator(
-                    value: _downloadProgress,
-                    backgroundColor: Colors.white54,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
-                    strokeWidth: 2,
+          : _downloadError
+              ? BubbleNormalImage(
+                  id: widget.message.id,
+                  image: GestureDetector(
+                    onTap: () {
+                      _downloadImage();
+                    },
+                    child: Container(
+                      width: 100,
+                      height: 100,
+                      color: Colors.black12,
+                      child: SvgPicture.asset(
+                        AppIcons.reload,
+                        fit: BoxFit.scaleDown,
+                      ),
+                    ),
                   ),
-                ],
-              ),
-              tail: widget.tail,
-              isSender: isFromCurrentUser,
-              color: widget.message.isDisappearing
-                  ? AppColors.disappearingBubble
-                  : AppColors.transparent,
-            );
+                  tail: widget.tail,
+                  isSender: isFromCurrentUser,
+                  color: widget.message.isDisappearing
+                      ? AppColors.disappearingBubble
+                      : AppColors.transparent,
+                )
+              : BubbleNormalImage(
+                  id: widget.message.id,
+                  image: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      if (_downloadedImage != null)
+                        _buildBlurryImage(_downloadedImage!),
+                      Container(
+                        width: 100,
+                        height: 100,
+                        color: Colors.black12,
+                        child: Center(
+                          child: SizedBox(
+                            height: 48,
+                            width: 48,
+                            child: CircularProgressIndicator(
+                              value: _downloadProgress,
+                              backgroundColor: AppColors.backgroundColor,
+                              valueColor: const AlwaysStoppedAnimation<Color>(
+                                  AppColors.inputBorder),
+                              strokeWidth: 4,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  tail: widget.tail,
+                  isSender: isFromCurrentUser,
+                  color: widget.message.isDisappearing
+                      ? AppColors.disappearingBubble
+                      : AppColors.transparent,
+                );
     }
 
     return BubbleSpecialThree(
